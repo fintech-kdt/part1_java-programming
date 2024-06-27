@@ -35,6 +35,7 @@ public class SimpleDiary {
                     break;
                 case 3:
                     System.out.println("프로그램을 종료합니다.");
+                    scanner.close();
                     return;
                 default:
                     System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
@@ -56,6 +57,7 @@ public class SimpleDiary {
             content.append(line).append("\n");
         }
 
+        BufferedWriter writer = null;
         try {
             // 일기 저장 경로 가져오기
             String diaryPath = getDiaryPath();
@@ -67,12 +69,19 @@ public class SimpleDiary {
 
             // 일기 파일 생성 및 내용 쓰기
             File diaryFile = new File(diaryDir, fileName);
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(diaryFile))) {
-                writer.write(content.toString());
-            }
+            writer = new BufferedWriter(new FileWriter(diaryFile));
+            writer.write(content.toString());
             System.out.println("일기가 저장되었습니다.");
         } catch (IOException e) {
             System.err.println("일기 저장 중 오류 발생: " + e.getMessage());
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    System.err.println("자원 해제 중 오류 발생: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -80,6 +89,7 @@ public class SimpleDiary {
         System.out.print("읽고 싶은 일기의 날짜를 입력하세요 (yyyy-MM-dd): ");
         String dateStr = scanner.nextLine();
 
+        BufferedReader reader = null;
         try {
             // 입력받은 문자열을 LocalDate 객체로 변환
             LocalDate date = LocalDate.parse(dateStr, DATE_FORMATTER);
@@ -95,18 +105,25 @@ public class SimpleDiary {
             }
 
             // 파일에서 일기 내용 읽기
-            try (BufferedReader reader = new BufferedReader(new FileReader(diaryFile))) {
-                String line;
-                System.out.println("\n" + dateStr + "의 일기:");
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
+            reader = new BufferedReader(new FileReader(diaryFile));
+            String line;
+            System.out.println("\n" + dateStr + "의 일기:");
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
             }
         } catch (IOException e) {
             System.err.println("일기 읽기 중 오류 발생: " + e.getMessage());
         } catch (Exception e) {
             // 날짜 형식이 잘못된 경우 예외 처리
             System.err.println("잘못된 날짜 형식입니다. yyyy-MM-dd 형식으로 입력해주세요.");
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    System.err.println("자원 해제 중 오류 발생: " + e.getMessage());
+                }
+            }
         }
     }
 
